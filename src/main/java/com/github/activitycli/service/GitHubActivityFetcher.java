@@ -1,5 +1,7 @@
 package com.github.activitycli.service;
 
+
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -33,6 +35,11 @@ public class GitHubActivityFetcher {
 
                 // Parsear el JSON y mostrar la actividad
                 JSONArray events = new JSONArray(response.toString());
+                if (events.length() == 0) {
+                    System.out.println("El usuario no tiene actividad reciente.");
+                    return;
+                }
+
                 System.out.println("\nActividad reciente de GitHub para el usuario: " + username);
                 for (int i = 0; i < events.length(); i++) {
                     JSONObject event = events.getJSONObject(i);
@@ -42,20 +49,29 @@ public class GitHubActivityFetcher {
                     switch (eventType) {
                         case "PushEvent":
                             int commitCount = event.getJSONObject("payload").getJSONArray("commits").length();
-                            System.out.println("- Pushed " + commitCount + " commits to " + repoName);
+                            System.out.println("🚀 Pushed " + commitCount + " commits to " + repoName);
                             break;
                         case "IssuesEvent":
                             String action = event.getJSONObject("payload").getString("action");
-                            System.out.println("- " + capitalize(action) + " an issue in " + repoName);
+                            System.out.println("🐞 " + capitalize(action) + " an issue in " + repoName);
                             break;
                         case "WatchEvent":
-                            System.out.println("- Starred " + repoName);
+                            System.out.println("⭐ Starred " + repoName);
+                            break;
+                        case "ForkEvent":
+                            System.out.println("🍴 Forked " + repoName);
+                            break;
+                        case "PullRequestEvent":
+                            String prAction = event.getJSONObject("payload").getString("action");
+                            System.out.println("🔄 " + capitalize(prAction) + " a pull request in " + repoName);
                             break;
                         default:
                             // Ignorar otros tipos de eventos por ahora
                             break;
                     }
                 }
+            } else if (statusCode == 404) {
+                System.out.println("Error: Usuario no encontrado. Verifica el nombre de usuario.");
             } else {
                 System.out.println("Error: No se pudo obtener la actividad. Código de estado HTTP: " + statusCode);
             }
